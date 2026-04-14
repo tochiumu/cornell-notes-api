@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Note" ADD COLUMN     "color" TEXT NOT NULL DEFAULT '#FDF8F0';
+
+-- AlterTable
+ALTER TABLE "Tag" ADD COLUMN     "color" TEXT NOT NULL DEFAULT '#6B7280';
