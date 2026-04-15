@@ -4,17 +4,21 @@ import {
   updateNote,
   deleteNote,
 } from "@/libs/repositories/noteRepository"
+import { getUserFromRequest, unauthorized } from "@/libs/auth"
 import { notFound, serverError, isPrismaError } from "@/libs/apiResponse"
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(req)
+    if (!user) return unauthorized()
+
     const { id } = await params
     const note = await getNoteById(id)
 
-    if (!note) {
+    if (!note || (note.userId && note.userId !== user.id)) {
       return notFound("Note")
     }
 
@@ -29,7 +33,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(req)
+    if (!user) return unauthorized()
+
     const { id } = await params
+
+    const existing = await getNoteById(id)
+    if (!existing || (existing.userId && existing.userId !== user.id)) {
+      return notFound("Note")
+    }
+
     const body = await req.json()
 
     const data: Record<string, unknown> = {}
@@ -52,11 +65,20 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromRequest(req)
+    if (!user) return unauthorized()
+
     const { id } = await params
+
+    const existing = await getNoteById(id)
+    if (!existing || (existing.userId && existing.userId !== user.id)) {
+      return notFound("Note")
+    }
+
     await deleteNote(id)
     return NextResponse.json({ success: true })
   } catch (error) {

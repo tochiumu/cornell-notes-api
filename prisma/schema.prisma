@@ -6,8 +6,19 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  notes     Note[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Note {
   id        String    @id @default(uuid())
+  userId    String?
   title     String
   cue       String?
   note      String
@@ -15,10 +26,13 @@ model Note {
   color     String    @default("#FDF8F0")
   tagsData  Json?
   drawings  Json?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   cues      Cue[]
   tags      NoteTag[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([userId])
 }
 
 model Cue {

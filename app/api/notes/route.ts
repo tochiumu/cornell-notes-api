@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getNotes, createNote } from "@/libs/repositories/noteRepository"
+import { getUserFromRequest, unauthorized } from "@/libs/auth"
 import { badRequest, serverError } from "@/libs/apiResponse"
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await getUserFromRequest(req)
+    if (!user) return unauthorized()
+
     const { searchParams } = req.nextUrl
 
     const q = searchParams.get("q") ?? undefined
@@ -11,7 +15,7 @@ export async function GET(req: NextRequest) {
     const sort = searchParams.get("sort") as "createdAt" | "updatedAt" | undefined
     const order = searchParams.get("order") as "asc" | "desc" | undefined
 
-    const notes = await getNotes({ q, tag, sort, order })
+    const notes = await getNotes({ q, tag, sort, order, userId: user.id })
     return NextResponse.json(notes)
   } catch (error) {
     return serverError(error)
@@ -20,6 +24,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: Request) {
   try {
+    const user = await getUserFromRequest(req)
+    if (!user) return unauthorized()
+
     const body = await req.json()
 
     if (!body.title || typeof body.title !== "string" || !body.title.trim()) {
@@ -33,6 +40,7 @@ export async function POST(req: Request) {
       ...(body.color ? { color: body.color } : {}),
       ...(body.tags ? { tagsData: body.tags } : {}),
       ...(body.drawings ? { drawings: body.drawings } : {}),
+      userId: user.id,
     })
     return NextResponse.json(note, { status: 201 })
   } catch (error) {

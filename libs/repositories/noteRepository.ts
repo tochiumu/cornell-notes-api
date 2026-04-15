@@ -6,10 +6,15 @@ export type NoteSearchParams = {
   tag?: string
   sort?: "createdAt" | "updatedAt"
   order?: "asc" | "desc"
+  userId?: string
 }
 
 export async function getNotes(params?: NoteSearchParams) {
-  const conditions = []
+  const conditions: Record<string, unknown>[] = []
+
+  if (params?.userId) {
+    conditions.push({ userId: params.userId })
+  }
 
   if (params?.q) {
     conditions.push({
@@ -74,6 +79,7 @@ export async function createNote(data: {
   color?: string
   tagsData?: InputJsonValue
   drawings?: InputJsonValue
+  userId?: string
 }) {
   return prisma.note.create({ data })
 }
