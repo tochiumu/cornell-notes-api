@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { getTags, createTag } from "@/libs/repositories/tagRepository"
-import { badRequest, conflict, serverError } from "@/libs/apiResponse"
-import { Prisma } from "@prisma/client"
+import { badRequest, conflict, serverError, isPrismaError } from "@/libs/apiResponse"
 
 export async function GET() {
   try {
@@ -23,10 +22,7 @@ export async function POST(req: Request) {
     const tag = await createTag(body.name.trim())
     return NextResponse.json(tag, { status: 201 })
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
+    if (isPrismaError(error, "P2002")) {
       return conflict("Tag with this name already exists")
     }
     return serverError(error)

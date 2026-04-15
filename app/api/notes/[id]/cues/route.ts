@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCuesByNoteId, createCue } from "@/libs/repositories/cueRepository"
-import { badRequest, serverError } from "@/libs/apiResponse"
-import { Prisma } from "@prisma/client"
+import { badRequest, serverError, isPrismaError } from "@/libs/apiResponse"
 
 export async function GET(
   _req: Request,
@@ -31,10 +30,7 @@ export async function POST(
     const cue = await createCue(noteId, body.question.trim())
     return NextResponse.json(cue, { status: 201 })
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2003"
-    ) {
+    if (isPrismaError(error, "P2003")) {
       return badRequest("Invalid noteId")
     }
     return serverError(error)

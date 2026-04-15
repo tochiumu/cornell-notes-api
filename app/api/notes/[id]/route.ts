@@ -4,8 +4,7 @@ import {
   updateNote,
   deleteNote,
 } from "@/libs/repositories/noteRepository"
-import { notFound, serverError } from "@/libs/apiResponse"
-import { Prisma } from "@prisma/client"
+import { notFound, serverError, isPrismaError } from "@/libs/apiResponse"
 
 export async function GET(
   _req: Request,
@@ -45,10 +44,7 @@ export async function PUT(
     const note = await updateNote(id, data as Parameters<typeof updateNote>[1])
     return NextResponse.json(note)
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
+    if (isPrismaError(error, "P2025")) {
       return notFound("Note")
     }
     return serverError(error)
@@ -64,10 +60,7 @@ export async function DELETE(
     await deleteNote(id)
     return NextResponse.json({ success: true })
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
+    if (isPrismaError(error, "P2025")) {
       return notFound("Note")
     }
     return serverError(error)

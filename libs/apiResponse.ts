@@ -19,3 +19,12 @@ export function serverError(error: unknown) {
     { status: 500 }
   )
 }
+
+export function isPrismaError(error: unknown, code: string): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === code
+  )
+}

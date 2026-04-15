@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { updateCue, deleteCue } from "@/libs/repositories/cueRepository"
-import { notFound, serverError } from "@/libs/apiResponse"
-import { Prisma } from "@prisma/client"
+import { notFound, serverError, isPrismaError } from "@/libs/apiResponse"
 
 export async function PUT(
   req: Request,
@@ -14,10 +13,7 @@ export async function PUT(
     const cue = await updateCue(id, body)
     return NextResponse.json(cue)
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
+    if (isPrismaError(error, "P2025")) {
       return notFound("Cue")
     }
     return serverError(error)
@@ -33,10 +29,7 @@ export async function DELETE(
     await deleteCue(id)
     return NextResponse.json({ success: true })
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
+    if (isPrismaError(error, "P2025")) {
       return notFound("Cue")
     }
     return serverError(error)

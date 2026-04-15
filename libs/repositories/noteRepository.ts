@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client"
 import { prisma } from "../prisma"
+import type { InputJsonValue } from "@prisma/client/runtime/client.js"
 
 export type NoteSearchParams = {
   q?: string
@@ -9,18 +9,18 @@ export type NoteSearchParams = {
 }
 
 export async function getNotes(params?: NoteSearchParams) {
-  const conditions: Prisma.NoteWhereInput[] = []
+  const conditions = []
 
   if (params?.q) {
     conditions.push({
       OR: [
-        { title: { contains: params.q, mode: "insensitive" } },
-        { note: { contains: params.q, mode: "insensitive" } },
-        { summary: { contains: params.q, mode: "insensitive" } },
+        { title: { contains: params.q, mode: "insensitive" as const } },
+        { note: { contains: params.q, mode: "insensitive" as const } },
+        { summary: { contains: params.q, mode: "insensitive" as const } },
         {
           cues: {
             some: {
-              question: { contains: params.q, mode: "insensitive" },
+              question: { contains: params.q, mode: "insensitive" as const },
             },
           },
         },
@@ -34,11 +34,8 @@ export async function getNotes(params?: NoteSearchParams) {
     })
   }
 
-  const where: Prisma.NoteWhereInput =
-    conditions.length > 0 ? { AND: conditions } : {}
-
   return prisma.note.findMany({
-    where,
+    where: conditions.length > 0 ? { AND: conditions } : undefined,
     select: {
       id: true,
       title: true,
@@ -75,8 +72,8 @@ export async function createNote(data: {
   note: string
   summary?: string
   color?: string
-  tagsData?: unknown
-  drawings?: Record<string, unknown>
+  tagsData?: InputJsonValue
+  drawings?: InputJsonValue
 }) {
   return prisma.note.create({ data })
 }
@@ -89,8 +86,8 @@ export async function updateNote(
     note?: string
     summary?: string
     color?: string
-    tagsData?: unknown
-    drawings?: Record<string, unknown> | null
+    tagsData?: InputJsonValue
+    drawings?: InputJsonValue
   }
 ) {
   return prisma.note.update({

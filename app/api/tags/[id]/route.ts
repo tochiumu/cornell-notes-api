@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { deleteTag } from "@/libs/repositories/tagRepository"
-import { notFound, serverError } from "@/libs/apiResponse"
-import { Prisma } from "@prisma/client"
+import { notFound, serverError, isPrismaError } from "@/libs/apiResponse"
 
 export async function DELETE(
   _req: Request,
@@ -12,10 +11,7 @@ export async function DELETE(
     await deleteTag(id)
     return NextResponse.json({ success: true })
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
+    if (isPrismaError(error, "P2025")) {
       return notFound("Tag")
     }
     return serverError(error)
